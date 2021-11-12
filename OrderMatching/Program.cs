@@ -15,6 +15,11 @@ namespace OrderMatching
         {
             return Price.CompareTo(other.Price);
         }
+
+        public override string ToString()
+        {
+            return $"{CustomerId} wants to buy/sell {Quantity} {StockId} at price {Price}";
+        }
     }
 
     class Transaction
@@ -26,6 +31,10 @@ namespace OrderMatching
         public double Price { get; set; }
         public uint Quantity { get; set; }
         public string StockId { get; set; }
+        public override string ToString()
+        {
+            return $"{BuyerId} buy {Quantity} BTC at price {Price} from {SellerId}";
+        }
     }
 
     class OrderExecutionResult
@@ -54,7 +63,7 @@ namespace OrderMatching
             var Found = true;
             var BuyOrdersLeft = new List<Order>();
             var SellOrdersLeft = new List<Order>();
-            while (Found && i >= 0)
+            while (Found && i >= 0 && Right >= 0)
             {
                 var l = 0;
                 var r = Right;
@@ -143,7 +152,87 @@ namespace OrderMatching
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            var rand = new Random();
+            var BuyerOrders = new List<Order>();
+            var SellerOrders = new List<Order>();
+            for (int i = 0; i < 20; i++)
+            {
+                var p = rand.NextDouble();
+                while (p == 0)
+                {
+                    p = rand.NextDouble();
+                }
+                var q = rand.NextDouble();
+                while (q == 0)
+                {
+                    q = rand.NextDouble();
+                }
+                var order = new Order()
+                {
+                    CustomerId = $"Hieu{i}",
+                    StockId = "BTC",
+                    Price = p * 200,
+                    Quantity = (uint)Math.Ceiling(q * 20)
+                };
+                BuyerOrders.Add(order);
+            }
+            for (int i = 0; i < 20; i++)
+            {
+                var p = rand.NextDouble();
+                while (p == 0)
+                {
+                    p = rand.NextDouble();
+                }
+                var q = rand.NextDouble();
+                while (q == 0)
+                {
+                    q = rand.NextDouble();
+                }
+                var order = new Order()
+                {
+                    CustomerId = $"Plh{i}",
+                    StockId = "BTC",
+                    Price = p * 200,
+                    Quantity = (uint)Math.Ceiling(q * 20)
+                };
+                SellerOrders.Add(order);
+            }
+            
+            foreach (var order in BuyerOrders)
+            {
+                Console.WriteLine(order);
+            }
+
+            Console.WriteLine("END BUY");
+
+            foreach (var order in SellerOrders)
+            {
+                Console.WriteLine(order);
+            }
+
+            Console.WriteLine("END SELL");
+
+            var res = OrderExecution(BuyerOrders, SellerOrders);
+            foreach (var t in res.Transactions)
+            {
+                Console.WriteLine(t);
+            }
+
+            Console.WriteLine("END TRANSACTIONS");
+
+            foreach (var order in res.BuyOrdersLeft)
+            {
+                Console.WriteLine(order);
+            }
+
+            Console.WriteLine("END BUYLEFT");
+
+            foreach (var order in res.SellOrdersLeft)
+            {
+                Console.WriteLine(order);
+            }
+
+            Console.WriteLine("END SELLLEFT");
         }
     }
 }
