@@ -55,6 +55,7 @@ namespace OrderMatching
                 }
                 var order = new Order()
                 {
+                    OrderType = OrderType.SELL,
                     CustomerId = $"Plh{i}",
                     StockId = "BTC",
                     Price = Math.Round(p * 200, 2),
@@ -119,6 +120,7 @@ namespace OrderMatching
                 }
                 var order = new Order()
                 {
+                    OrderType = OrderType.BUY,
                     CustomerId = $"Hieu{i}",
                     StockId = "BTC",
                     Price = Math.Round(p * 200, 2),
@@ -140,6 +142,7 @@ namespace OrderMatching
                 }
                 var order = new Order()
                 {
+                    OrderType = OrderType.SELL,
                     CustomerId = $"Plh{i}",
                     StockId = "BTC",
                     Price = Math.Round(p * 200, 2),
@@ -207,6 +210,7 @@ namespace OrderMatching
                 }
                 var order = new Order()
                 {
+                    OrderType = OrderType.BUY,
                     CustomerId = $"Hieu{i}",
                     StockId = "BTC",
                     Price = Math.Round(p * 200, 2),
@@ -228,6 +232,7 @@ namespace OrderMatching
                 }
                 var order = new Order()
                 {
+                    OrderType = OrderType.SELL,
                     CustomerId = $"Plh{i}",
                     StockId = "BTC",
                     Price = Math.Round(p * 200, 2),
@@ -260,6 +265,7 @@ namespace OrderMatching
                 }
                 var order = new Order()
                 {
+                    OrderType = OrderType.BUY,
                     CustomerId = $"Hieu{i}",
                     StockId = "BTC",
                     Price = Math.Round(p * 200, 2),
@@ -281,6 +287,7 @@ namespace OrderMatching
                 }
                 var order = new Order()
                 {
+                    OrderType = OrderType.SELL,
                     CustomerId = $"Plh{i}",
                     StockId = "BTC",
                     Price = Math.Round(p * 200, 2),

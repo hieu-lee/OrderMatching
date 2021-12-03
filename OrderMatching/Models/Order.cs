@@ -5,6 +5,7 @@ namespace OrderMatching.Models
     public class Order : IComparable<Order>
     {
         public string Id = Guid.NewGuid().ToString();
+        public OrderType OrderType { get; set; }
         public string StockId { get; set; }
         public string CustomerId { get; set; }
         public uint Quantity { get; set; }
@@ -23,7 +24,11 @@ namespace OrderMatching.Models
 
         public override string ToString()
         {
-            return $"{CustomerId} wants to buy/sell {Quantity} {StockId} at price {Price}";
+            if (OrderType == OrderType.BUY)
+            {
+                return $"{CustomerId} wants to buy {Quantity} {StockId} at price {Price}";
+            }
+            return $"{CustomerId} wants to sell {Quantity} {StockId} at price {Price}";
         }
 
         public override int GetHashCode()
