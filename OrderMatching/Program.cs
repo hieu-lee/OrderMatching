@@ -1,156 +1,124 @@
-﻿using System;
+﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
+using OrderMatching.Models;
+using System;
 using System.Collections.Generic;
 
 namespace OrderMatching
 {
-    class Order : IComparable<Order>
-    {
-        public string Id = Guid.NewGuid().ToString();
-        public string StockId { get; set; }
-        public string CustomerId { get; set; }
-        public uint Quantity { get; set; }
-        public double Price { get; set; }
-
-        public int CompareTo(Order other)
-        {
-            return Price.CompareTo(other.Price);
-        }
-
-        public override string ToString()
-        {
-            return $"{CustomerId} wants to buy/sell {Quantity} {StockId} at price {Price}";
-        }
-    }
-
-    class Transaction
-    {
-        public string Id = Guid.NewGuid().ToString();
-        public DateTime Time = DateTime.Now.ToUniversalTime();
-        public string BuyerId { get; set; }
-        public string SellerId { get; set; }
-        public double Price { get; set; }
-        public uint Quantity { get; set; }
-        public string StockId { get; set; }
-        public override string ToString()
-        {
-            return $"{BuyerId} buy {Quantity} BTC at price {Price} from {SellerId}";
-        }
-    }
-
-    class OrderExecutionResult
-    {
-        public Dictionary<string, double> BalanceChanges { get; set; }
-        public List<Transaction> Transactions { get; set; }
-        public List<Order> BuyOrdersLeft { get; set; }
-        public List<Order> SellOrdersLeft { get; set; }
-    }
-
-    class Program
+    [MemoryDiagnoser]
+    public class Program
     {
         // Matching algorithm for market maker with N buy orders and M sell orders
         // Time Complexity: O(max(NlogN, MlogM)) (O(NlogM) with sorted inputs)
         // Space Complexity: O(max(N,M))
+        static List<Order> BuyOrdersTest;
+        static List<Order> SellOrdersTest;
+
         static OrderExecutionResult OrderExecution(List<Order> BuyOrders, List<Order> SellOrders)
         {
+            var StockId = BuyOrders[0].StockId;
             BuyOrders.Sort();
             SellOrders.Sort();
             var n = BuyOrders.Count;
             var m = SellOrders.Count;
             var i = n - 1;
-            var Right = m - 1;
-            var Res = new Dictionary<string, double>();
-            var Transactions = new List<Transaction>();
+            var j = m - 1;
             var Found = true;
-            var BuyOrdersLeft = new List<Order>();
-            var SellOrdersLeft = new List<Order>();
-            while (Found && i >= 0 && Right >= 0)
+            var Transactions = new List<Transaction>();
+            var BalanceChanges = new Dictionary<string, double>();
+            while (Found && i >= 0 && j >= 0)
             {
-                var l = 0;
-                var r = Right;
-                Found = false;
-                while (l <= r)
+                if (SellOrders[j].Price > BuyOrders[i].Price)
                 {
-                    var mid = l + ((r - l) >> 1);
-                    if ((SellOrders[mid].Price <= BuyOrders[i].Price) && (mid == Right || SellOrders[mid + 1].Price > BuyOrders[i].Price))
+                    Found = false;
+                    var l = 0;
+                    var r = j - 1;
+                    while (l <= r)
                     {
-                        var q = Math.Min(SellOrders[mid].Quantity, BuyOrders[i].Quantity);
-                        SellOrders[mid].Quantity -= q;
-                        BuyOrders[i].Quantity -= q;
-                        var c = q * SellOrders[mid].Price;
-                        if (Res.ContainsKey(SellOrders[mid].CustomerId))
+                        var mid = l + ((r - l) >> 1);
+                        if (SellOrders[mid].Price <= BuyOrders[i].Price && SellOrders[mid + 1].Price > BuyOrders[i].Price)
                         {
-                            Res[SellOrders[mid].CustomerId] += c;
+                            Found = true;
+                            j = mid;
+                            break;
+                        }
+                        else if (SellOrders[mid].Price <= BuyOrders[i].Price)
+                        {
+                            l = mid + 1;
                         }
                         else
                         {
-                            Res[SellOrders[mid].CustomerId] = c;
+                            r = mid - 1;
                         }
-                        if (Res.ContainsKey(BuyOrders[i].CustomerId))
-                        {
-                            Res[BuyOrders[i].CustomerId] -= c;
-                        }
-                        else
-                        {
-                            Res[BuyOrders[i].CustomerId] = -c;
-                        }
-                        Transactions.Add(new()
-                        {
-                            BuyerId = BuyOrders[i].CustomerId,
-                            SellerId = SellOrders[mid].CustomerId,
-                            Price = SellOrders[mid].Price, Quantity = q
-                        });
-                        if (SellOrders[mid].Quantity == 0)
-                        {
-                            Right = mid - 1;
-                        }
-                        else
-                        {
-                            i--;
-                        }
-                        Found = true;
-                        break;
                     }
-                    else if (SellOrders[mid].Price <= BuyOrders[i].Price)
+                    if (!Found)
                     {
-                        l = mid + 1;
-                    }
-                    else
-                    {
-                        r = mid - 1;
+                        j = -1;
                     }
                 }
-            }
-
-            for (int j = 0; j < n; j++)
-            {
-                if (BuyOrders[j].Quantity > 0)
-                {
-                    BuyOrdersLeft.Add(BuyOrders[j]);
-                }
-                else
+                if (j == -1)
                 {
                     break;
                 }
-            }
-
-            for (int j = 0; j < m; j++)
-            {
-                if (SellOrders[j].Quantity > 0)
+                else
                 {
-                    SellOrdersLeft.Add(SellOrders[j]);
+                    while (BuyOrders[i].Quantity > 0 && j >= 0)
+                    {
+                        var q = (BuyOrders[i].Quantity <= SellOrders[j].Quantity)?BuyOrders[i].Quantity : SellOrders[j].Quantity;
+                        var p = SellOrders[j].Price;
+                        BuyOrders[i].Quantity -= q;
+                        SellOrders[j].Quantity -= q;
+                        Transactions.Add(new()
+                        {
+                            BuyerId = BuyOrders[i].CustomerId,
+                            SellerId = SellOrders[j].CustomerId,
+                            Price = p,
+                            Quantity = q,
+                            StockId = StockId
+                        });
+                        if (!BalanceChanges.ContainsKey(BuyOrders[i].CustomerId))
+                        {
+                            BalanceChanges[BuyOrders[i].CustomerId] = 0;
+                        }
+                        if (!BalanceChanges.ContainsKey(SellOrders[j].CustomerId))
+                        {
+                            BalanceChanges[SellOrders[j].CustomerId] = 0;
+                        }
+                        var c = Math.Round(p * q, 2);
+                        BalanceChanges[BuyOrders[i].CustomerId] -= c;
+                        BalanceChanges[SellOrders[j].CustomerId] += c;
+                        if (SellOrders[j].Quantity == 0)
+                        {
+                            j--;
+                        }
+                    }
+                    i--;
                 }
             }
-
+            var BuyOrderLeft = new List<Order>();
+            var SellOrderLeft = new List<Order>();
+            for (int k = 0; k < i + 1; k++)
+            {
+                BuyOrderLeft.Add(BuyOrders[k]);
+            }
+            foreach (var order in SellOrders)
+            {
+                if (order.Quantity > 0)
+                {
+                    SellOrderLeft.Add(order);
+                }
+            }
             return new()
             {
-                BalanceChanges = Res,
-                Transactions = Transactions,
-                BuyOrdersLeft = BuyOrdersLeft,
-                SellOrdersLeft = SellOrdersLeft
+                BalanceChanges = BalanceChanges,
+                BuyOrdersLeft = BuyOrderLeft,
+                SellOrdersLeft = SellOrderLeft,
+                Transactions = Transactions
             };
         }
 
-        static void Main(string[] args)
+        static void Test()
         {
             var rand = new Random();
             var BuyerOrders = new List<Order>();
@@ -171,7 +139,7 @@ namespace OrderMatching
                 {
                     CustomerId = $"Hieu{i}",
                     StockId = "BTC",
-                    Price = p * 200,
+                    Price = Math.Round(p * 200, 2),
                     Quantity = (uint)Math.Ceiling(q * 20)
                 };
                 BuyerOrders.Add(order);
@@ -192,12 +160,12 @@ namespace OrderMatching
                 {
                     CustomerId = $"Plh{i}",
                     StockId = "BTC",
-                    Price = p * 200,
+                    Price = Math.Round(p * 200, 2),
                     Quantity = (uint)Math.Ceiling(q * 20)
                 };
                 SellerOrders.Add(order);
             }
-            
+
             foreach (var order in BuyerOrders)
             {
                 Console.WriteLine(order);
@@ -233,6 +201,64 @@ namespace OrderMatching
             }
 
             Console.WriteLine("END SELLLEFT");
+        }
+
+        [Benchmark]
+        public void TestPerformance()
+        {
+            var m = 50000;
+            var n = 50000;
+            var rand = new Random();
+            BuyOrdersTest = new();
+            SellOrdersTest = new();
+            for (int i = 0; i < m; i++)
+            {
+                var p = rand.NextDouble();
+                while (p == 0)
+                {
+                    p = rand.NextDouble();
+                }
+                var q = rand.NextDouble();
+                while (q == 0)
+                {
+                    q = rand.NextDouble();
+                }
+                var order = new Order()
+                {
+                    CustomerId = $"Hieu{i}",
+                    StockId = "BTC",
+                    Price = Math.Round(p * 200, 2),
+                    Quantity = (uint)Math.Ceiling(q * 20)
+                };
+                BuyOrdersTest.Add(order);
+            }
+            for (int i = 0; i < n; i++)
+            {
+                var p = rand.NextDouble();
+                while (p == 0)
+                {
+                    p = rand.NextDouble();
+                }
+                var q = rand.NextDouble();
+                while (q == 0)
+                {
+                    q = rand.NextDouble();
+                }
+                var order = new Order()
+                {
+                    CustomerId = $"Plh{i}",
+                    StockId = "BTC",
+                    Price = Math.Round(p * 200, 2),
+                    Quantity = (uint)Math.Ceiling(q * 20)
+                };
+                SellOrdersTest.Add(order);
+            }
+            OrderExecution(BuyOrdersTest, SellOrdersTest);
+        }
+
+        static void Main(string[] args)
+        {
+            var summary = BenchmarkRunner.Run<Program>();
         }
     }
 }
