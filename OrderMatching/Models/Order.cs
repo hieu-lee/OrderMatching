@@ -10,6 +10,12 @@ namespace OrderMatching.Models
         public uint Quantity { get; set; }
         public double Price { get; set; }
 
+        public override bool Equals(object obj)
+        {
+            var other = obj as Order;
+            return Id == other.Id;
+        }
+
         public int CompareTo(Order other)
         {
             return Price.CompareTo(other.Price);
@@ -18,6 +24,11 @@ namespace OrderMatching.Models
         public override string ToString()
         {
             return $"{CustomerId} wants to buy/sell {Quantity} {StockId} at price {Price}";
+        }
+
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
         }
     }
 }
