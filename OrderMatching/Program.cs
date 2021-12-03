@@ -12,8 +12,63 @@ namespace OrderMatching
         // Matching algorithm for market maker with N buy orders and M sell orders
         // Time Complexity: O(max(NlogN, MlogM)) (O(M) with sorted inputs)
         // Space Complexity: O(max(N,M))
-        static List<Order> BuyOrdersTest;
-        static List<Order> SellOrdersTest;
+        List<Order> BuyOrdersTest;
+        List<Order> SellOrdersTest;
+
+        public Program()
+        {
+            var m = 1000000;
+            var n = 1000000;
+            var rand = new Random();
+            BuyOrdersTest = new();
+            SellOrdersTest = new();
+            for (int i = 0; i < m; i++)
+            {
+                var p = rand.NextDouble();
+                while (p == 0)
+                {
+                    p = rand.NextDouble();
+                }
+                var q = rand.NextDouble();
+                while (q == 0)
+                {
+                    q = rand.NextDouble();
+                }
+                var order = new Order()
+                {
+                    OrderType = OrderType.BUY,
+                    CustomerId = $"Hieu{i}",
+                    StockId = "BTC",
+                    Price = Math.Round(p * 200, 2),
+                    Quantity = (uint)Math.Ceiling(q * 20)
+                };
+                BuyOrdersTest.Add(order);
+            }
+            for (int i = 0; i < n; i++)
+            {
+                var p = rand.NextDouble();
+                while (p == 0)
+                {
+                    p = rand.NextDouble();
+                }
+                var q = rand.NextDouble();
+                while (q == 0)
+                {
+                    q = rand.NextDouble();
+                }
+                var order = new Order()
+                {
+                    OrderType = OrderType.SELL,
+                    CustomerId = $"Plh{i}",
+                    StockId = "BTC",
+                    Price = Math.Round(p * 200, 2),
+                    Quantity = (uint)Math.Ceiling(q * 20)
+                };
+                SellOrdersTest.Add(order);
+            }
+            BuyOrdersTest.Sort();
+            SellOrdersTest.Sort();
+        }
 
         static void TestAlter()
         {
@@ -189,113 +244,27 @@ namespace OrderMatching
         }
 
         [Benchmark]
-        public void TestPerformanceAlterMatching()
+        public void TestPerformanceMatchingAlgorithm1()
         {
-            var m = 100000;
-            var n = 100000;
-            var rand = new Random();
-            BuyOrdersTest = new();
-            SellOrdersTest = new();
-            for (int i = 0; i < m; i++)
-            {
-                var p = rand.NextDouble();
-                while (p == 0)
-                {
-                    p = rand.NextDouble();
-                }
-                var q = rand.NextDouble();
-                while (q == 0)
-                {
-                    q = rand.NextDouble();
-                }
-                var order = new Order()
-                {
-                    OrderType = OrderType.BUY,
-                    CustomerId = $"Hieu{i}",
-                    StockId = "BTC",
-                    Price = Math.Round(p * 200, 2),
-                    Quantity = (uint)Math.Ceiling(q * 20)
-                };
-                BuyOrdersTest.Add(order);
-            }
-            for (int i = 0; i < n; i++)
-            {
-                var p = rand.NextDouble();
-                while (p == 0)
-                {
-                    p = rand.NextDouble();
-                }
-                var q = rand.NextDouble();
-                while (q == 0)
-                {
-                    q = rand.NextDouble();
-                }
-                var order = new Order()
-                {
-                    OrderType = OrderType.SELL,
-                    CustomerId = $"Plh{i}",
-                    StockId = "BTC",
-                    Price = Math.Round(p * 200, 2),
-                    Quantity = (uint)Math.Ceiling(q * 20)
-                };
-                SellOrdersTest.Add(order);
-            }
             MatchingAlgorithms.MatchingAlgorithm1(BuyOrdersTest, SellOrdersTest);
         }
 
         [Benchmark]
-        public void TestPerformanceMatching()
+        public void TestPerformanceMatchingAlgorithm2()
         {
-            var m = 100000;
-            var n = 100000;
-            var rand = new Random();
-            BuyOrdersTest = new();
-            SellOrdersTest = new();
-            for (int i = 0; i < m; i++)
-            {
-                var p = rand.NextDouble();
-                while (p == 0)
-                {
-                    p = rand.NextDouble();
-                }
-                var q = rand.NextDouble();
-                while (q == 0)
-                {
-                    q = rand.NextDouble();
-                }
-                var order = new Order()
-                {
-                    OrderType = OrderType.BUY,
-                    CustomerId = $"Hieu{i}",
-                    StockId = "BTC",
-                    Price = Math.Round(p * 200, 2),
-                    Quantity = (uint)Math.Ceiling(q * 20)
-                };
-                BuyOrdersTest.Add(order);
-            }
-            for (int i = 0; i < n; i++)
-            {
-                var p = rand.NextDouble();
-                while (p == 0)
-                {
-                    p = rand.NextDouble();
-                }
-                var q = rand.NextDouble();
-                while (q == 0)
-                {
-                    q = rand.NextDouble();
-                }
-                var order = new Order()
-                {
-                    OrderType = OrderType.SELL,
-                    CustomerId = $"Plh{i}",
-                    StockId = "BTC",
-                    Price = Math.Round(p * 200, 2),
-                    Quantity = (uint)Math.Ceiling(q * 20)
-                };
-                SellOrdersTest.Add(order);
-            }
             MatchingAlgorithms.MatchingAlgorithm2(BuyOrdersTest, SellOrdersTest);
+        }
+
+        [Benchmark]
+        public void TestPerformanceMatchingAlgorithm1Sorted()
+        {
+            MatchingAlgorithms.MatchingAlgorithm1(BuyOrdersTest, SellOrdersTest, true);
+        }
+
+        [Benchmark]
+        public void TestPerformanceMatchingAlgorithm2Sorted()
+        {
+            MatchingAlgorithms.MatchingAlgorithm2(BuyOrdersTest, SellOrdersTest, true);
         }
 
         static void Main(string[] args)
