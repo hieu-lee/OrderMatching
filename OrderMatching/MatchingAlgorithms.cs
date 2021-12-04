@@ -1,13 +1,8 @@
-﻿using OrderMatching.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace OrderMatching
+﻿namespace OrderMatching
 {
     public class MatchingAlgorithms
     {
-        public static OrderExecutionResult MatchingAlgorithm1(List<Order> BuyOrders, List<Order> SellOrders, bool Sorted = false)
+        public static OrderExecutionResult MatchingAlgorithm1(List<Order> BuyOrders, List<Order> SellOrders, List<Transaction> Transactions, Dictionary<string, double> BalanceChanges, bool Sorted = false)
         {
             var StockId = BuyOrders[0].StockId;
             if (!Sorted)
@@ -15,8 +10,6 @@ namespace OrderMatching
                 BuyOrders.Sort();
                 SellOrders.Sort();
             }
-            var Transactions = new List<Transaction>();
-            var BalanceChanges = new Dictionary<string, double>();
             var SellOrderLeft = new List<Order>();
             var j = SellOrders.Count - 1;
             var i = BuyOrders.Count - 1;
@@ -69,15 +62,13 @@ namespace OrderMatching
             }
             return new()
             {
-                BalanceChanges = BalanceChanges,
                 BuyOrdersLeft = BuyOrders,
-                SellOrdersLeft = SellOrderLeft,
-                Transactions = Transactions
+                SellOrdersLeft = SellOrderLeft
             };
         }
 
 
-        public static OrderExecutionResult MatchingAlgorithm2(List<Order> BuyOrders, List<Order> SellOrders, bool Sorted = false)
+        public static OrderExecutionResult MatchingAlgorithm2(List<Order> BuyOrders, List<Order> SellOrders, List<Transaction> Transactions, Dictionary<string, double> BalanceChanges, bool Sorted = false)
         {
             var StockId = BuyOrders[0].StockId;
             if (!Sorted)
@@ -88,8 +79,6 @@ namespace OrderMatching
             var i = BuyOrders.Count - 1;
             var j = SellOrders.Count - 1;
             var Found = true;
-            var Transactions = new List<Transaction>();
-            var BalanceChanges = new Dictionary<string, double>();
             while (Found && i >= 0 && j >= 0)
             {
                 if (SellOrders[j].Price > BuyOrders[i].Price)
@@ -174,10 +163,64 @@ namespace OrderMatching
             }
             return new()
             {
-                BalanceChanges = BalanceChanges,
                 BuyOrdersLeft = BuyOrderLeft,
-                SellOrdersLeft = SellOrderLeft,
-                Transactions = Transactions
+                SellOrdersLeft = SellOrderLeft
+            };
+        }
+
+
+        public static Dictionary<string, SeperatedOrders> SeperateSortedOrders(List<Order> BuyOrders, List<Order> SellOrders) 
+        {
+            BuyOrders.Sort();
+            SellOrders.Sort();
+            var res = new Dictionary<string, SeperatedOrders>();
+            for (int i = 0; i < BuyOrders.Count; i++)
+            {
+                var order = BuyOrders[i];
+                if (!res.ContainsKey(order.StockId))
+                {
+                    res[order.StockId] = new();
+                }
+                res[order.StockId].BuyOrders.Add(order);
+            }
+            for (int i = 0; i < SellOrders.Count; i++)
+            {
+                var order = SellOrders[i];
+                if (!res.ContainsKey(order.StockId))
+                {
+                    res[order.StockId] = new();
+                }
+                res[order.StockId].SellOrders.Add(order);
+            }
+            return res;
+        }
+
+
+        public static OrderExecutionResult ExecuteOrders(List<Order> BuyOrders, List<Order> SellOrders)
+        {
+            var SeperatedRes = SeperateSortedOrders(BuyOrders, SellOrders);
+            List<Transaction> Transactions = new();
+            Dictionary<string, double> BalanceChanges = new();
+            List<Order> BuyOrdersLeft = new();
+            List<Order> SellOrdersLeft = new();
+            foreach(var stockId in SeperatedRes.Keys)
+            {
+                var tmp = MatchingAlgorithm1(SeperatedRes[stockId].BuyOrders, SeperatedRes[stockId].SellOrders, Transactions, BalanceChanges, true);
+                foreach(var order in tmp.BuyOrdersLeft)
+                {
+                    BuyOrdersLeft.Add(order);
+                }
+                foreach(var order in tmp.SellOrdersLeft)
+                {
+                    SellOrdersLeft.Add(order);
+                }
+            }
+            return new()
+            {
+                BalanceChanges = BalanceChanges,
+                Transactions = Transactions,
+                BuyOrdersLeft = BuyOrdersLeft,
+                SellOrdersLeft = SellOrdersLeft
             };
         }
     }

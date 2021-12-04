@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace OrderMatching.Models
+﻿namespace OrderMatching.Models
 {
     public class Transaction
     {
