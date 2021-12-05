@@ -1,23 +1,20 @@
 ﻿namespace OrderMatching.Tests
 {
-    [MemoryDiagnoser]
-    public class PerformanceTest
+    public class DemoTest
     {
         List<Order> BuyOrdersTest;
         List<Order> SellOrdersTest;
-        List<Order> BuyOrdersTestSort;
-        List<Order> SellOrdersTestSort;
 
-        public PerformanceTest()
+        public DemoTest()
         {
-            var m = 150000;
-            var n = 150000;
+            var m = 27;
+            var n = 27;
             var rand = new Random();
             BuyOrdersTest = new();
             SellOrdersTest = new();
             for (int i = 0; i < m; i++)
             {
-                var j = rand.Next(10);
+                var j = rand.Next(3);
                 var p = rand.NextDouble();
                 while (p == 0)
                 {
@@ -40,7 +37,7 @@
             }
             for (int i = 0; i < n; i++)
             {
-                var j = rand.Next(10);
+                var j = rand.Next(3);
                 var p = rand.NextDouble();
                 while (p == 0)
                 {
@@ -61,35 +58,45 @@
                 };
                 SellOrdersTest.Add(order);
             }
-            Order[] tmp1 = new Order[m];
-            Order[] tmp2 = new Order[n];
-            BuyOrdersTest.CopyTo(tmp1, 0);
-            SellOrdersTest.CopyTo(tmp2, 0);
-            BuyOrdersTestSort = new(tmp1);
-            SellOrdersTestSort = new(tmp2);
         }
 
-        [Benchmark]
-        public void TheAlgorithm()
+        public void RunDemo()
         {
-            MatchingAlgorithms.ExecuteOrders(BuyOrdersTest, SellOrdersTest);
-        }
-
-        [Benchmark]
-        public void SortingPartOfTheAlgorithm()
-        {
-            BuyOrdersTestSort.Sort();
-            SellOrdersTestSort.Sort();
-        }
-
-        public static void StartBenchmark()
-        {
-            Console.WriteLine("The program will benchmark the algorithm matching 300,000 orders (including buy and sell)");
-            Console.WriteLine("Do you want to start? [Y/N]");
-            var answer = Console.ReadLine();
-            if (answer.ToUpper().Trim() == "Y")
+            Console.WriteLine("Buy Orders:");
+            foreach (var order in BuyOrdersTest)
             {
-                var _ = BenchmarkRunner.Run<PerformanceTest>();
+                Console.WriteLine(order);
+            }
+            Console.WriteLine("END BUY\n");
+
+            Console.WriteLine("Sell Orders:");
+            foreach (var order in SellOrdersTest)
+            {
+                Console.WriteLine(order);
+            }
+            Console.WriteLine("END SELL");
+        
+            var res = MatchingAlgorithms.ExecuteOrders(BuyOrdersTest, SellOrdersTest);
+
+            Console.WriteLine("\nTransactions:");
+            foreach (var t in res.Transactions)
+            {
+                Console.WriteLine(t);
+            }
+            Console.WriteLine("\nBalance Changes:");
+            foreach (var customerId in res.BalanceChanges.Keys)
+            {
+                Console.WriteLine($"{customerId}: {res.BalanceChanges[customerId]}");
+            }
+            Console.WriteLine("\nBuy Orders Left:");
+            foreach (var order in res.BuyOrdersLeft)
+            {
+                Console.WriteLine(order);
+            }
+            Console.WriteLine("\nSell Orders Left:");
+            foreach (var order in res.SellOrdersLeft)
+            {
+                Console.WriteLine(order);
             }
         }
     }

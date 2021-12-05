@@ -1,4 +1,6 @@
-﻿namespace OrderMatching
+﻿using System.Threading.Tasks;
+
+namespace OrderMatching
 {
     public class MatchingAlgorithms
     {
@@ -48,7 +50,7 @@
                         {
                             BalanceChanges[SellOrders[j].CustomerId] = 0;
                         }
-                        var c = Math.Round(p * q, 2);
+                        var c = p * q;
                         BalanceChanges[BuyOrders[i].CustomerId] -= c;
                         BalanceChanges[SellOrders[j].CustomerId] += c;
                         if (SellOrders[j].Quantity == 0)
@@ -59,6 +61,14 @@
                     BuyOrders.RemoveAt(i);
                     i--;
                 }
+            }
+            //Parallel.ForEach(BalanceChanges.Keys, k =>
+            //{
+            //    BalanceChanges[k] = Math.Round(BalanceChanges[k], 2);
+            //});
+            foreach (var k in BalanceChanges.Keys)
+            {
+                BalanceChanges[k] = Math.Round(BalanceChanges[k], 2);
             }
             return new()
             {
@@ -137,7 +147,7 @@
                         {
                             BalanceChanges[SellOrders[j].CustomerId] = 0;
                         }
-                        var c = Math.Round(p * q, 2);
+                        var c = p * q;
                         BalanceChanges[BuyOrders[i].CustomerId] -= c;
                         BalanceChanges[SellOrders[j].CustomerId] += c;
                         if (SellOrders[j].Quantity == 0)
@@ -160,6 +170,14 @@
                 {
                     SellOrderLeft.Add(order);
                 }
+            }
+            //Parallel.ForEach(BalanceChanges.Keys, k =>
+            //{
+            //    BalanceChanges[k] = Math.Round(BalanceChanges[k], 2);
+            //});
+            foreach (var k in BalanceChanges.Keys)
+            {
+                BalanceChanges[k] = Math.Round(BalanceChanges[k], 2);
             }
             return new()
             {

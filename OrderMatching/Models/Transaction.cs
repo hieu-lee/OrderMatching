@@ -11,7 +11,7 @@
         public string StockId { get; set; }
         public override string ToString()
         {
-            return $"{BuyerId} buy {Quantity} BTC at price {Price} from {SellerId}";
+            return $"{BuyerId} buy {Quantity} {StockId} at price {Price} from {SellerId}";
         }
     }
 }
