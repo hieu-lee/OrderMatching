@@ -1,12 +1,9 @@
-﻿using System.Threading.Tasks;
-
-namespace OrderMatching
+﻿namespace OrderMatching
 {
     public class MatchingAlgorithms
     {
-        public static OrderExecutionResult MatchingAlgorithm1(List<Order> BuyOrders, List<Order> SellOrders, List<Transaction> Transactions, Dictionary<string, double> BalanceChanges, bool Sorted = false)
+        public static OrderExecutionResult MatchingAlgorithm1(List<Order> BuyOrders, List<Order> SellOrders, List<Transaction> Transactions, Dictionary<string, double> BalanceChanges, string StockId, bool Sorted = false)
         {
-            var StockId = BuyOrders[0].StockId;
             if (!Sorted)
             {
                 BuyOrders.Sort();
@@ -78,9 +75,8 @@ namespace OrderMatching
         }
 
 
-        public static OrderExecutionResult MatchingAlgorithm2(List<Order> BuyOrders, List<Order> SellOrders, List<Transaction> Transactions, Dictionary<string, double> BalanceChanges, bool Sorted = false)
+        public static OrderExecutionResult MatchingAlgorithm2(List<Order> BuyOrders, List<Order> SellOrders, List<Transaction> Transactions, Dictionary<string, double> BalanceChanges, string StockId, bool Sorted = false)
         {
-            var StockId = BuyOrders[0].StockId;
             if (!Sorted)
             {
                 BuyOrders.Sort();
@@ -197,7 +193,7 @@ namespace OrderMatching
                 var order = BuyOrders[i];
                 if (!res.ContainsKey(order.StockId))
                 {
-                    res[order.StockId] = new();
+                    res[order.StockId] = new() { StockId = order.StockId };
                 }
                 res[order.StockId].BuyOrders.Add(order);
             }
@@ -206,7 +202,7 @@ namespace OrderMatching
                 var order = SellOrders[i];
                 if (!res.ContainsKey(order.StockId))
                 {
-                    res[order.StockId] = new();
+                    res[order.StockId] = new() { StockId = order.StockId };
                 }
                 res[order.StockId].SellOrders.Add(order);
             }
@@ -223,7 +219,7 @@ namespace OrderMatching
             List<Order> SellOrdersLeft = new();
             foreach(var stockId in SeperatedRes.Keys)
             {
-                var tmp = MatchingAlgorithm1(SeperatedRes[stockId].BuyOrders, SeperatedRes[stockId].SellOrders, Transactions, BalanceChanges, true);
+                var tmp = MatchingAlgorithm1(SeperatedRes[stockId].BuyOrders, SeperatedRes[stockId].SellOrders, Transactions, BalanceChanges, stockId, true);
                 foreach(var order in tmp.BuyOrdersLeft)
                 {
                     BuyOrdersLeft.Add(order);
